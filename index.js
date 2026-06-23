@@ -481,21 +481,66 @@ async function run() {
       }
     });
 
-    app.get("/bookings/my", async (req, res) => {
-      try {
-        const { userEmail } = req.query;
-        if (!userEmail) return res.status(400).send({ error: "userEmail required" });
+   app.get("/bookings/my", async (req, res) => {
+  try {
+    const { userEmail } = req.query;
+    if (!userEmail) return res.status(400).send({ error: "userEmail required" });
 
-        const bookings = await bookingsCollection
-          .find({ attendeeEmail: userEmail })
-          .sort({ bookedAt: -1 })
-          .toArray();
-        res.send({ bookings });
-      } catch (error) {
-        console.error("GET /bookings/my error:", error);
-        res.status(500).send({ error: "Failed to fetch bookings" });
+    // MongoDB Aggregation Pipeline ব্যবহার করে ক্লাসের শিডিউল নিয়ে আসা হচ্ছে
+    const bookings = await bookingsCollection.aggregate([
+      {
+        $match: { attendeeEmail: userEmail }
+      },
+      {
+        // classId স্ট্রিং হলে সেটিকে ObjectId তে রূপান্তর করে classesCollection এর সাথে ম্যাচ করা হচ্ছে
+        $addFields: {
+          convertedClassId: { $toObjectId: "$classId" }
+        }
+      },
+      {
+        $lookup: {
+          from: "classes",          // আপনার ক্লাসের কালেকশনের নাম (যেমন: classes)
+          localField: "convertedClassId",
+          foreignField: "_id",
+          as: "classDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$classDetails",
+          preserveNullAndEmptyArrays: true // ক্লাস ডিলিট হয়ে গেলেও বুকিং ডেটা দেখাবে
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          classId: 1,
+          className: 1,
+          trainerName: 1,
+          attendeeEmail: 1,
+          price: 1,
+          transactionId: 1,
+          paymentStatus: 1,
+          bookedAt: 1,
+          schedule: { 
+            $ifNull: [
+              "$classDetails.schedule", 
+              { $ifNull: ["$classDetails.slot", { $ifNull: ["$classDetails.slotTime", "—"] }] }
+            ] 
+          }
+        }
+      },
+      {
+        $sort: { bookedAt: -1 }
       }
-    });
+    ]).toArray();
+
+    res.send({ bookings });
+  } catch (error) {
+    console.error("GET /bookings/my error:", error);
+    res.status(500).send({ error: "Failed to fetch bookings" });
+  }
+});
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // FAVORITES ROUTES
@@ -825,12 +870,14 @@ app.get("/trainer/stats", async (req, res) => {
 app.get("/notifications", async (req, res) => {
   try {
     const { userEmail } = req.query;
-    if (!userEmail) return res.status(400).send({ error: "userEmail required" });
+
+    if (!userEmail) {
+      return res.status(400).send({ error: "userEmail required" });
+    }
 
     const notifications = await notificationsCollection
       .find({ userEmail })
       .sort({ createdAt: -1 })
-      .limit(20)
       .toArray();
 
     res.send({ notifications });
@@ -1092,24 +1139,22 @@ app.patch("/notifications/read-all", async (req, res) => {
       }
     );
 
-    if (status === "Approved") {
-      // User role trainer e update
+     if (status === "Approved") {
       await usersCollection.updateOne(
         { email: application.userEmail },
         { $set: { role: "trainer" } }
       );
 
-      // Approval notification
       await notificationsCollection.insertOne({
         userEmail: application.userEmail,
         type: "trainer_approved",
         title: "Trainer Application Approved!",
-        message: "Congratulations! Your trainer application has been approved. You now have full trainer access.",
+        message:
+          "Congratulations! Your trainer application has been approved.",
         read: false,
         createdAt: new Date(),
       });
     }
-
     if (status === "Rejected") {
       // Rejection notification
       await notificationsCollection.insertOne({
