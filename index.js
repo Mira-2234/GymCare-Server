@@ -96,7 +96,7 @@ async function run() {
       };
     };
 
-    // POST /jwt — Better-auth login সফল হওয়ার পর frontend এটা call করবে
+    
     app.post("/jwt", async (req, res) => {
       try {
         const { email } = req.body;
@@ -129,7 +129,7 @@ async function run() {
       }
     });
 
-    // POST /logout — JWT cookie clear করে
+   
     app.post("/logout", (req, res) => {
       res
         .clearCookie("token", {
@@ -140,9 +140,7 @@ async function run() {
         .send({ success: true });
     });
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // CLASS ROUTES
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
     app.get("/api/classes", async (req, res) => {
       try {
         const search = req.query.search || "";
