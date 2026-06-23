@@ -46,9 +46,7 @@ async function run() {
     const trainerApplicationsCollection = db.collection("trainerApplications");
     const notificationsCollection = db.collection("notifications");
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // HELPERS
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
     const verifyAdmin = async (req, res, next) => {
       try {
         const email = req.query.email || req.body.userEmail;
@@ -65,17 +63,13 @@ async function run() {
       }
     };
 
-    // Soft block check — blocked user action prevent korar jonno
+    
     const checkBlocked = async (email) => {
       const user = await usersCollection.findOne({ email });
       return user?.status === "Blocked";
     };
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 🔴 JWT AUTH HELPERS
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    // verifyToken — HTTPOnly cookie থেকে JWT পড়ে ভেরিফাই করে
+    
     const verifyToken = (req, res, next) => {
       const token = req.cookies?.token;
 
@@ -87,12 +81,12 @@ async function run() {
         if (err) {
           return res.status(401).send({ error: "Unauthorized: Invalid or expired token." });
         }
-        req.decoded = decoded; // { email, role }
+        req.decoded = decoded; 
         next();
       });
     };
 
-    // verifyRole — role-based access, verifyToken এর পরে ব্যবহার করতে হবে
+   
     const verifyRole = (...allowedRoles) => {
       return (req, res, next) => {
         if (!req.decoded || !allowedRoles.includes(req.decoded.role)) {
