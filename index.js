@@ -446,9 +446,7 @@ async function run() {
       }
     });
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // BOOKING ROUTES
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
     app.post("/bookings/check", async (req, res) => {
       try {
         const { classId, userEmail } = req.body;
@@ -474,20 +472,19 @@ async function run() {
     const { userEmail } = req.query;
     if (!userEmail) return res.status(400).send({ error: "userEmail required" });
 
-    // MongoDB Aggregation Pipeline ব্যবহার করে ক্লাসের শিডিউল নিয়ে আসা হচ্ছে
     const bookings = await bookingsCollection.aggregate([
       {
         $match: { attendeeEmail: userEmail }
       },
       {
-        // classId স্ট্রিং হলে সেটিকে ObjectId তে রূপান্তর করে classesCollection এর সাথে ম্যাচ করা হচ্ছে
+        
         $addFields: {
           convertedClassId: { $toObjectId: "$classId" }
         }
       },
       {
         $lookup: {
-          from: "classes",          // আপনার ক্লাসের কালেকশনের নাম (যেমন: classes)
+          from: "classes",          
           localField: "convertedClassId",
           foreignField: "_id",
           as: "classDetails"
