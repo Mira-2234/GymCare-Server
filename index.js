@@ -897,9 +897,7 @@ app.patch("/notifications/read-all", async (req, res) => {
   }
 });
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // ADMIN — CHECK ROLE
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
     app.get("/api/check-admin", async (req, res) => {
       try {
         const { email } = req.query;
@@ -913,9 +911,7 @@ app.patch("/notifications/read-all", async (req, res) => {
       }
     });
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // ADMIN — STATS — 🔴 JWT + role double protection
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
     app.get("/api/admin/stats", verifyToken, verifyRole("admin"), verifyAdmin, async (req, res) => {
       try {
         const [totalUsers, totalClasses, totalApprovedClasses, totalBookedClasses] =
