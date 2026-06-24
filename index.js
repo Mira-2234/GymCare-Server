@@ -13,7 +13,11 @@ const stripe = Stripe(process.env.STRIPE_SECRET);
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", process.env.CLIENT_URL],
+    origin: [
+      "http://localhost:3000",
+      "https://gym-care-client.vercel.app",
+      process.env.CLIENT_URL,
+    ],
     credentials: true,
   })
 );
